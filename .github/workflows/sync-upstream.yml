@@ -1,15 +1,29 @@
 name: Sync Fork from Upstream
+
 on:
   schedule:
-    - cron: '0 18 * * 5'
+    - cron: '0 18 * * 5'  # Saturday 2AM SGT (Friday 18:00 UTC)
   workflow_dispatch:
+
+concurrency:
+  group: sync-fork
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
 jobs:
   sync:
+    if: github.repository_owner != 'kentcdodds'  # Safety: don't run on upstream
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+
     steps:
-      - uses: tgymnich/fork-sync@v2.0
+      - uses: actions/checkout@v4
+
+      - name: Sync fork with upstream
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
-          base: main
-          head: main
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_repo: kentcdodds/kentcdodds.com
+          upstream_sync_branch: main
+          target_sync_branch: main
